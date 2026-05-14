@@ -21,7 +21,7 @@
 --   DELETE cascade → удалание поддеревьев
 --   DELETE reassign → сотрудники из удаляемого подразделения переходят в другое подразделение
 --   include_employees=false → без сотрудников в ответе
---   Employees with and without hired_at → проверка обработки nullable полей
+--   Сотрудники с и без hired_at → проверка обработки nullable полей
 
 INSERT INTO departments (id, name, parent_id) VALUES
   (1, 'Компания',    NULL),
