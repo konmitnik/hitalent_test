@@ -1,0 +1,47 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: test_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d test_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  migrate:
+    image: golang:1.26.3-alpine
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: >
+      sh -c "go install github.com/pressly/goose/v3/cmd/goose@v3.21.1 &&
+             /go/bin/goose -dir /app/migrations postgres 'host=db port=5432 user=postgres password=postgres dbname=test_db sslmode=disable' up"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: test_db
+      DB_SSLMODE: disable
+
+volumes:
+  pgdata:
